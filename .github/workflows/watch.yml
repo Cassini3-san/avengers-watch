@@ -5,6 +5,11 @@ on:
     # Каждые 5 минут. Время в GitHub всегда UTC (Ташкент = UTC+5).
     - cron: "*/5 * * * *"
   workflow_dispatch:
+    inputs:
+      ping:
+        description: "Отправить тестовое сообщение в Telegram"
+        type: boolean
+        default: false
 
 concurrency:
   group: cinematica-watch
@@ -20,6 +25,24 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Test ping
+        if: ${{ inputs.ping }}
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT: ${{ secrets.TG_CHAT }}
+        run: |
+          code=$(curl -s -o /tmp/tg.json -w "%{http_code}" \
+            "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+            --data-urlencode "chat_id=$TG_CHAT" \
+            --data-urlencode "text=Proverka svyazi: GitHub Actions pishet v etot chat. Slezhenie za Mstitelyami nastroeno.")
+          echo "HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "Telegram otvetil oshibkoy:"
+            cat /tmp/tg.json
+            exit 1
+          fi
+          echo "Soobshchenie dostavleno."
 
       - name: Proverka repertuara
         env:
