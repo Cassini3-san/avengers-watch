@@ -10,6 +10,10 @@ on:
         description: "Отправить тестовое сообщение в Telegram"
         type: boolean
         default: false
+      test_url:
+        description: "Разовая проверка по другому адресу API (для теста тревоги)"
+        type: string
+        default: ""
 
 concurrency:
   group: cinematica-watch
@@ -48,6 +52,6 @@ jobs:
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT: ${{ secrets.TG_CHAT }}
-          WATCH_URL: https://cinematica.uz/api/v1/repertory/movie/995/grouped
+          WATCH_URL: ${{ inputs.test_url != '' && inputs.test_url || 'https://cinematica.uz/api/v1/repertory/movie/995/grouped' }}
           WATCH_PAGE: https://cinematica.uz/movies/995
         run: python check.py
